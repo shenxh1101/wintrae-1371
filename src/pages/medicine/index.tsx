@@ -28,6 +28,7 @@ const MedicinePage: React.FC = () => {
   const updateMedicine = useAppStore((s) => s.updateMedicine);
   const deleteMedicine = useAppStore((s) => s.deleteMedicine);
   const savePrescriptionToMedicine = useAppStore((s) => s.savePrescriptionToMedicine);
+  const getLowStockMedicines = useAppStore((s) => s.getLowStockMedicines);
 
   const [activeCategory, setActiveCategory] = useState<string>('全部');
   const [searchText, setSearchText] = useState('');
@@ -58,9 +59,7 @@ const MedicinePage: React.FC = () => {
     return { total, lowStock, longTerm, totalStock };
   }, [medicines]);
 
-  const lowStockList = useMemo(() => {
-    return medicines.filter(m => m.stock <= m.stockThreshold * 1.5);
-  }, [medicines]);
+  const lowStockList = useMemo(() => getLowStockMedicines(), [getLowStockMedicines, medicines]);
 
   const filteredMedicines = useMemo(() => {
     return medicines.filter(m => {

@@ -58,6 +58,8 @@ interface AppState {
   getTodayStats: () => { total: number; taken: number; delayed: number; missed: number; pending: number; adherenceRate: number };
   getAverageVitals: () => { avgSystolic: number; avgDiastolic: number; avgBloodSugar: number; avgPulse: number };
   getAdherenceRateHistory: (days: number) => DailyRecord[];
+  getLowStockMedicines: () => Medicine[];
+  getDayDetails: (date: string) => { reminders: Reminder[]; abnormalRecords: AbnormalRecord[]; vitalsRecords: VitalsRecord[] };
   generateDoctorReport: () => string;
 }
 
@@ -82,22 +84,33 @@ const buildDailyRecordsFromReminders = (
   existingRecords: DailyRecord[]
 ): DailyRecord[] => {
   const map = new Map<string, DailyRecord>();
-  existingRecords.forEach((r) => map.set(r.date, { ...r }));
+  existingRecords.forEach((r) => map.set(r.date, {
+    date: r.date,
+    totalCount: 0,
+    takenCount: 0,
+    delayedCount: 0,
+    missedCount: 0,
+    adherenceRate: 100
+  }));
 
+  const reminderDates = new Set<string>();
   reminders.forEach((rem) => {
-    const rec = map.get(rem.date) || {
-      date: rem.date,
-      totalCount: 0,
-      takenCount: 0,
-      delayedCount: 0,
-      missedCount: 0,
-      adherenceRate: 100
-    };
+    reminderDates.add(rem.date);
+    if (!map.has(rem.date)) {
+      map.set(rem.date, {
+        date: rem.date,
+        totalCount: 0,
+        takenCount: 0,
+        delayedCount: 0,
+        missedCount: 0,
+        adherenceRate: 100
+      });
+    }
+    const rec = map.get(rem.date)!;
     rec.totalCount += 1;
     if (rem.status === 'taken') rec.takenCount += 1;
     else if (rem.status === 'delayed') rec.delayedCount += 1;
     else if (rem.status === 'missed') rec.missedCount += 1;
-    map.set(rem.date, rec);
   });
 
   return Array.from(map.values())
@@ -106,6 +119,14 @@ const buildDailyRecordsFromReminders = (
       adherenceRate: calcAdherenceRate(r.takenCount + r.delayedCount * 0.5, r.totalCount)
     }))
     .sort((a, b) => (a.date < b.date ? -1 : 1));
+};
+
+const parseDoseAmount = (dose: string): number => {
+  if (!dose) return 1;
+  const match = dose.match(/([0-9]+(?:\.[0-9]+)?)/);
+  if (!match) return 1;
+  const num = parseFloat(match[1]);
+  return num > 0 ? num : 1;
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -232,7 +253,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           : r
       )
     }));
-    get().updateMedicineStock(reminder.medicineId, -1);
+    const delta = Math.ceil(parseDoseAmount(reminder.dose));
+    get().updateMedicineStock(reminder.medicineId, -delta);
 
     const { reminders, dailyRecords } = get();
     const newDaily = buildDailyRecordsFromReminders(reminders, dailyRecords);
@@ -273,6 +295,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         ...s.abnormalRecords
       ]
     }));
+    const delta = Math.ceil(parseDoseAmount(reminder.dose));
+    get().updateMedicineStock(reminder.medicineId, -delta);
 
     const { reminders, dailyRecords } = get();
     const newDaily = buildDailyRecordsFromReminders(reminders, dailyRecords);
@@ -438,13 +462,31 @@ export const useAppStore = create<AppState>((set, get) => ({
     return all.slice(0, days).reverse();
   },
 
+  getLowStockMedicines: () => {
+    return get().medicines.filter((m) => m.stock <= m.stockThreshold * 1.5);
+  },
+
+  getDayDetails: (date) => {
+    const s = get();
+    return {
+      reminders: s.reminders
+        .filter((r) => r.date === date)
+        .sort((a, b) => a.time.localeCompare(b.time)),
+      abnormalRecords: s.abnormalRecords.filter((a) => a.date === date),
+      vitalsRecords: s.vitalsRecords.filter((v) => v.date === date)
+    };
+  },
+
   generateDoctorReport: () => {
     const s = get();
     const stats = s.getTodayStats();
     const avg = s.getAverageVitals();
     const upcomingApts = s.appointments.filter((a) => a.status === 'upcoming');
+    const completedApts = s.appointments.filter((a) => a.status === 'completed');
     const abnormalRecent = s.abnormalRecords.slice(0, 10);
     const activeMeds = s.medicines;
+    const medsWithPrescription = s.medicines.filter((m) => m.prescriptionImage);
+    const aptsWithPrescription = s.appointments.filter((a) => a.prescriptionImage);
 
     const lines: string[] = [];
     lines.push('=== 家庭用药与健康报告 ===');
@@ -456,9 +498,17 @@ export const useAppStore = create<AppState>((set, get) => ({
       lines.push(
         `${i + 1}. ${m.name} - ${m.dose}，${m.frequencyDetail}，疗程：${m.duration}`
       );
-      lines.push(`   库存：${m.stock}片，注意事项：${m.precautions}`);
+      lines.push(`   库存：${m.stock}份，注意事项：${m.precautions}`);
+      if (m.prescriptionImage) {
+        lines.push(`   ✅ 已上传处方照片`);
+      }
     });
     lines.push('');
+    if (medsWithPrescription.length > 0) {
+      lines.push(`   已关联处方照片的药品共 ${medsWithPrescription.length} 种：`);
+      medsWithPrescription.forEach((m) => lines.push(`   · ${m.name}`));
+      lines.push('');
+    }
     lines.push('【二、近30天服药情况】');
     lines.push(
       `    今日服药率：${stats.adherenceRate}%（已服${stats.taken}次/延后${stats.delayed}次/漏服${stats.missed}次/待服${stats.pending}次）`
@@ -496,9 +546,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     } else {
       upcomingApts.forEach((a) => {
         lines.push(
-          `    ${a.date} ${a.time} - ${a.hospital} ${a.department}${a.doctor ? '（' + a.doctor + '）' : ''}：${a.title}`
+          `    ${a.date} ${a.time} - ${a.hospital} ${a.department}${a.doctor ? '（' + a.doctor + '）' : ''}：${a.title}${a.prescriptionImage ? ' [已上传处方]' : ''}`
         );
       });
+    }
+    lines.push('');
+    if (completedApts.length > 0) {
+      lines.push('【六、历史就诊记录】');
+      completedApts.slice(0, 5).forEach((a) => {
+        lines.push(
+          `    ${a.date} ${a.time} - ${a.hospital} ${a.department}${a.doctor ? '（' + a.doctor + '）' : ''}：${a.title}${a.prescriptionImage ? ' [已上传处方]' : ''}`
+        );
+      });
+    }
+    if (aptsWithPrescription.length > 0) {
+      lines.push('');
+      lines.push(`   已保存处方照片的就诊记录共 ${aptsWithPrescription.length} 次`);
     }
     lines.push('');
     lines.push('=== 报告结束 ===');

@@ -12,11 +12,11 @@ type FilterType = 'all' | 'pending' | 'taken' | 'abnormal';
 
 const ReminderPage: React.FC = () => {
   const reminders = useAppStore((s) => s.reminders);
-  const medicines = useAppStore((s) => s.medicines);
   const takeReminder = useAppStore((s) => s.takeReminder);
   const delayReminder = useAppStore((s) => s.delayReminder);
   const missReminder = useAppStore((s) => s.missReminder);
   const getTodayStats = useAppStore((s) => s.getTodayStats);
+  const getLowStockMedicines = useAppStore((s) => s.getLowStockMedicines);
 
   const [filter, setFilter] = useState<FilterType>('all');
 
@@ -29,9 +29,7 @@ const ReminderPage: React.FC = () => {
 
   const stats = useMemo(() => getTodayStats(), [getTodayStats, todayReminders]);
 
-  const lowStockMedicines = useMemo(() => {
-    return medicines.filter((m) => m.stock <= m.stockThreshold * 1.5);
-  }, [medicines]);
+  const lowStockMedicines = useMemo(() => getLowStockMedicines(), [getLowStockMedicines, reminders]);
 
   const filteredReminders = useMemo(() => {
     let list = [...todayReminders];

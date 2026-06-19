@@ -8,8 +8,11 @@ import { DailyRecord, VitalsRecord, AbnormalRecord } from '@/types';
 import RecordCard from '@/components/RecordCard';
 import StatCard from '@/components/StatCard';
 
-type TabType = 'daily' | 'vitals' | 'abnormal';
+type TabType = 'daily' | 'vitals' | 'abnormal' | 'calendar';
 type ChartPeriod = '7d' | '14d' | '30d';
+
+const padZero = (n: number) => (n < 10 ? '0' + n : '' + n);
+const formatDate = (d: Date) => `${d.getFullYear()}-${padZero(d.getMonth() + 1)}-${padZero(d.getDate())}`;
 
 const RecordPage: React.FC = () => {
   const dailyRecords = useAppStore((s) => s.dailyRecords);
@@ -18,9 +21,16 @@ const RecordPage: React.FC = () => {
   const addVitalsRecord = useAppStore((s) => s.addVitalsRecord);
   const getAverageVitals = useAppStore((s) => s.getAverageVitals);
   const getAdherenceRateHistory = useAppStore((s) => s.getAdherenceRateHistory);
+  const getDayDetails = useAppStore((s) => s.getDayDetails);
 
   const [activeTab, setActiveTab] = useState<TabType>('daily');
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('14d');
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d;
+  });
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const [showVitalsModal, setShowVitalsModal] = useState(false);
   const [formSys, setFormSys] = useState('');
@@ -51,6 +61,94 @@ const RecordPage: React.FC = () => {
   }, [chartPeriod, getAdherenceRateHistory]);
 
   const avgVitals = useMemo(() => getAverageVitals(), [getAverageVitals, vitalsRecords]);
+
+  const goPrevMonth = () => {
+    setCurrentMonth((prev) => {
+      const d = new Date(prev);
+      d.setMonth(d.getMonth() - 1);
+      return d;
+    });
+    setSelectedDate(null);
+  };
+
+  const goNextMonth = () => {
+    setCurrentMonth((prev) => {
+      const d = new Date(prev);
+      d.setMonth(d.getMonth() + 1);
+      return d;
+    });
+    setSelectedDate(null);
+  };
+
+  const calendarDays = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const firstWeekday = firstDay.getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const dailyMap = new Map(dailyRecords.map((r) => [r.date, r]);
+    const abnormalDates = new Set(abnormalRecords.map((a) => a.date));
+    const vitalsDates = new Set(vitalsRecords.map((v) => v.date));
+
+    const cells: Array<{
+      dateStr: string;
+      day: number;
+      isCurrentMonth: boolean;
+      daily: DailyRecord | undefined;
+      hasAbnormal: boolean;
+      hasVitals: boolean;
+    }> = [];
+
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    for (let i = firstWeekday - 1; i >= 0; i--) {
+      const dayNum = prevMonthDays - i;
+      const d = new Date(year, month - 1, dayNum);
+      const dateStr = formatDate(d);
+      cells.push({
+        dateStr,
+        day: dayNum,
+        isCurrentMonth: false,
+        daily: dailyMap.get(dateStr),
+        hasAbnormal: abnormalDates.has(dateStr),
+        hasVitals: vitalsDates.has(dateStr)
+      });
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      const d = new Date(year, month, i);
+      const dateStr = formatDate(d);
+      cells.push({
+        dateStr,
+        day: i,
+        isCurrentMonth: true,
+        daily: dailyMap.get(dateStr),
+        hasAbnormal: abnormalDates.has(dateStr),
+        hasVitals: vitalsDates.has(dateStr)
+      });
+    }
+
+    const remaining = 42 - cells.length;
+    for (let i = 1; i <= remaining; i++) {
+      const d = new Date(year, month + 1, i);
+      const dateStr = formatDate(d);
+      cells.push({
+        dateStr,
+        day: i,
+        isCurrentMonth: false,
+        daily: dailyMap.get(dateStr),
+        hasAbnormal: abnormalDates.has(dateStr),
+        hasVitals: vitalsDates.has(dateStr)
+      });
+    }
+
+    return cells;
+  }, [currentMonth, dailyRecords, abnormalRecords, vitalsRecords]);
+
+  const selectedDetails = useMemo(() => {
+    if (!selectedDate) return null;
+    return getDayDetails(selectedDate);
+  }, [selectedDate, getDayDetails]);
 
   const handleAddVitals = () => {
     setFormSys('');
@@ -232,6 +330,15 @@ const RecordPage: React.FC = () => {
           >
             异常记录
           </Button>
+          <Button
+            className={classnames(
+              styles.sectionTab,
+              activeTab === 'calendar' && styles.sectionTabActive
+            )}
+            onClick={() => setActiveTab('calendar')}
+          >
+            用药日历
+          </Button>
         </View>
 
         {activeTab === 'daily' && (
@@ -400,6 +507,228 @@ const RecordPage: React.FC = () => {
                   )}
                 </View>
               ))
+            )}
+          </View>
+        )}
+
+        {activeTab === 'calendar' && (
+          <View className={styles.calendarWrap}>
+            <View className={styles.calendarCard}>
+              <View className={styles.calendarHeader}>
+                <Button className={styles.calendarNavBtn} onClick={goPrevMonth}>
+                  ‹
+                </Button>
+                <Text className={styles.calendarMonthLabel}>
+                  {currentMonth.getFullYear()}年{currentMonth.getMonth() + 1}月
+                </Text>
+                <Button className={styles.calendarNavBtn} onClick={goNextMonth}>
+                  ›
+                </Button>
+              </View>
+
+              <View className={styles.calendarWeekRow}>
+                {['日', '一', '二', '三', '四', '五', '六'].map((w) => (
+                  <View key={w} className={styles.calendarWeekCell}>
+                    <Text className={styles.calendarWeekText}>{w}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View className={styles.calendarGrid}>
+                {calendarDays.map((cell, idx) => {
+                  const adherence = cell.daily?.adherenceRate;
+                  let dotColor: string | null = null;
+                  if (adherence !== undefined) {
+                    if (adherence >= 90) dotColor = '#22C55E';
+                    else if (adherence >= 60) dotColor = '#F59E0B';
+                    else dotColor = '#EF4444';
+                  } else if (cell.hasAbnormal) {
+                    dotColor = '#EF4444';
+                  }
+                  const isSelected = selectedDate === cell.dateStr;
+                  const isToday = cell.dateStr === formatDate(new Date());
+                  return (
+                    <View
+                      key={idx}
+                      className={classnames(
+                        styles.calendarCell,
+                        !cell.isCurrentMonth && styles.calendarCellOther,
+                        isSelected && styles.calendarCellSelected,
+                        isToday && styles.calendarCellToday
+                      )}
+                      onClick={() => {
+                        if (cell.isCurrentMonth) {
+                          setSelectedDate(selectedDate === cell.dateStr ? null : cell.dateStr);
+                        }
+                      }}
+                    >
+                      {typeof adherence === 'number' && (
+                        <Text className={styles.calendarAdherence}>{adherence}%</Text>
+                      )}
+                      <Text
+                        className={classnames(
+                          styles.calendarDayText,
+                          !cell.isCurrentMonth && styles.calendarDayTextOther,
+                          isSelected && styles.calendarDayTextSelected,
+                          isToday && styles.calendarDayTextToday
+                        )}
+                      >
+                        {cell.day}
+                      </Text>
+                      <View className={styles.calendarDots}>
+                        {dotColor && (
+                          <View
+                            className={styles.calendarDot}
+                            style={{ background: dotColor }}
+                          />
+                        )}
+                        {cell.hasVitals && (
+                          <View
+                            className={styles.calendarDot}
+                            style={{ background: '#3B82F6' }}
+                          />
+                        )}
+                        {cell.hasAbnormal && (
+                          <View
+                            className={styles.calendarDot}
+                            style={{ background: '#F97316' }}
+                          />
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+
+              <View className={styles.calendarLegend}>
+                <View className={styles.calendarLegendItem}>
+                  <View className={styles.calendarLegendDot} style={{ background: '#22C55E' }} />
+                  <Text>服药优</Text>
+                </View>
+                <View className={styles.calendarLegendItem}>
+                  <View className={styles.calendarLegendDot} style={{ background: '#F59E0B' }} />
+                  <Text>良好</Text>
+                </View>
+                <View className={styles.calendarLegendItem}>
+                  <View className={styles.calendarLegendDot} style={{ background: '#EF4444' }} />
+                  <Text>待改进</Text>
+                </View>
+                <View className={styles.calendarLegendItem}>
+                  <View className={styles.calendarLegendDot} style={{ background: '#3B82F6' }} />
+                  <Text>有体征</Text>
+                </View>
+                <View className={styles.calendarLegendItem}>
+                  <View className={styles.calendarLegendDot} style={{ background: '#F97316' }} />
+                  <Text>有异常</Text>
+                </View>
+              </View>
+            </View>
+
+            {selectedDetails && selectedDate && (
+              <View className={styles.dayDetailPanel}>
+                <View className={styles.dayDetailHeader}>
+                  <Text className={styles.dayDetailTitle}>{selectedDate} 详情</Text>
+                </View>
+
+                <View className={styles.dayDetailSection}>
+                  <Text className={styles.dayDetailSectionTitle}>💊 服药提醒</Text>
+                  {selectedDetails.reminders.length === 0 ? (
+                    <Text className={styles.dayDetailEmpty}>暂无数据</Text>
+                  ) : (
+                    selectedDetails.reminders.map((r) => (
+                      <View key={r.id} className={styles.dayDetailItem}>
+                        <View className={styles.dayDetailItemTop}>
+                          <Text className={styles.dayDetailItemName}>{r.medicineName}</Text>
+                          <Text
+                            className={classnames(
+                              styles.dayDetailItemStatus,
+                              r.status === 'taken' && styles.statusTaken,
+                              r.status === 'delayed' && styles.statusDelayed,
+                              r.status === 'missed' && styles.statusMissed,
+                              r.status === 'pending' && styles.statusPending
+                            )}
+                          >
+                            {r.status === 'taken'
+                              ? '已服'
+                              : r.status === 'delayed'
+                              ? '延后'
+                              : r.status === 'missed'
+                              ? '漏服'
+                              : '待服'}
+                          </Text>
+                        </View>
+                        <View className={styles.dayDetailItemInfo}>
+                          <Text>⏰ {r.time}</Text>
+                          <Text>💊 {r.dose}</Text>
+                        </View>
+                      </View>
+                    ))
+                  )}
+                </View>
+
+                <View className={styles.dayDetailSection}>
+                  <Text className={styles.dayDetailSectionTitle}>⚠️ 异常记录</Text>
+                  {selectedDetails.abnormalRecords.length === 0 ? (
+                    <Text className={styles.dayDetailEmpty}>暂无数据</Text>
+                  ) : (
+                    selectedDetails.abnormalRecords.map((a) => (
+                      <View key={a.id} className={styles.dayDetailItem}>
+                        <View className={styles.dayDetailItemTop}>
+                          <Text className={styles.dayDetailItemName}>{a.medicineName}</Text>
+                          <Text
+                            className={classnames(
+                              styles.dayDetailItemStatus,
+                              a.type === 'missed' ? styles.statusMissed : styles.statusDelayed
+                            )}
+                          >
+                            {a.type === 'missed' ? '漏服' : '延后'}
+                          </Text>
+                        </View>
+                        <View className={styles.dayDetailItemInfo}>
+                          <Text>📅 {a.date}</Text>
+                          <Text>⏰ {a.time}</Text>
+                        </View>
+                        {a.note && <View className={styles.dayDetailNote}>💬 {a.note}</View>}
+                      </View>
+                    ))
+                  )}
+                </View>
+
+                <View className={styles.dayDetailSection}>
+                  <Text className={styles.dayDetailSectionTitle}>🩺 体征数据</Text>
+                  {selectedDetails.vitalsRecords.length === 0 ? (
+                    <Text className={styles.dayDetailEmpty}>暂无数据</Text>
+                  ) : (
+                    selectedDetails.vitalsRecords.map((v) => (
+                      <View key={v.id} className={styles.dayDetailItem}>
+                        <View className={styles.dayDetailItemTop}>
+                          <Text className={styles.dayDetailItemName}>体征记录</Text>
+                          <Text className={styles.dayDetailItemTime}>⏰ {v.time}</Text>
+                        </View>
+                        <View className={styles.dayDetailVitals}>
+                          {v.systolic && (
+                            <Text className={styles.dayDetailVitalItem}>
+                              血压 {v.systolic}/{v.diastolic} mmHg
+                            </Text>
+                          )}
+                          {v.bloodSugar && (
+                            <Text className={styles.dayDetailVitalItem}>
+                              血糖 {v.bloodSugar} mmol/L
+                            </Text>
+                          )}
+                          {v.pulse && (
+                            <Text className={styles.dayDetailVitalItem}>心率 {v.pulse} 次/分</Text>
+                          )}
+                          {v.temperature && (
+                            <Text className={styles.dayDetailVitalItem}>体温 {v.temperature}°C</Text>
+                          )}
+                        </View>
+                        {v.note && <View className={styles.dayDetailNote}>💬 {v.note}</View>}
+                      </View>
+                    ))
+                  )}
+                </View>
+              </View>
             )}
           </View>
         )}
