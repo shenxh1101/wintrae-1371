@@ -25,35 +25,22 @@ const statusTextMap: Record<ReminderStatus, string> = {
 };
 
 const ReminderCard: React.FC<ReminderCardProps> = ({ reminder, onStatusChange }) => {
-  const [localStatus, setLocalStatus] = useState<ReminderStatus>(reminder.status);
-
   const containerClass = classnames(
     styles.container,
-    localStatus === 'pending' && styles.containerPending,
-    localStatus === 'delayed' && styles.containerDelayed,
-    localStatus === 'missed' && styles.containerMissed
+    reminder.status === 'pending' && styles.containerPending,
+    reminder.status === 'delayed' && styles.containerDelayed,
+    reminder.status === 'missed' && styles.containerMissed
   );
 
   const badgeClass = classnames(
     styles.statusBadge,
-    localStatus === 'taken' && styles.statusTaken,
-    localStatus === 'pending' && styles.statusPending,
-    localStatus === 'delayed' && styles.statusDelayed,
-    localStatus === 'missed' && styles.statusMissed
+    reminder.status === 'taken' && styles.statusTaken,
+    reminder.status === 'pending' && styles.statusPending,
+    reminder.status === 'delayed' && styles.statusDelayed,
+    reminder.status === 'missed' && styles.statusMissed
   );
 
   const handleAction = (action: ReminderStatus) => {
-    const actions: Record<string, string> = {
-      taken: '已确认服用',
-      delayed: '已延后30分钟',
-      missed: '已标记为漏服'
-    };
-    Taro.showToast({
-      title: actions[action] || '操作成功',
-      icon: 'success',
-      duration: 1500
-    });
-    setLocalStatus(action);
     onStatusChange?.(reminder.id, action);
     console.log('[ReminderCard] 状态变更:', { id: reminder.id, medicine: reminder.medicineName, action });
   };
@@ -69,7 +56,7 @@ const ReminderCard: React.FC<ReminderCardProps> = ({ reminder, onStatusChange })
             </Text>
           </View>
         </View>
-        <Text className={badgeClass}>{statusTextMap[localStatus]}</Text>
+        <Text className={badgeClass}>{statusTextMap[reminder.status]}</Text>
       </View>
 
       <View className={styles.medicineSection}>
@@ -93,7 +80,7 @@ const ReminderCard: React.FC<ReminderCardProps> = ({ reminder, onStatusChange })
         </View>
       )}
 
-      {localStatus === 'pending' && (
+      {reminder.status === 'pending' && (
         <View className={styles.actions}>
           <Button
             className={classnames(styles.actionBtn, styles.btnPrimary)}

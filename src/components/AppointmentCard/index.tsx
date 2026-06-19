@@ -10,16 +10,16 @@ interface AppointmentCardProps {
   onToggleReminder?: (id: string, enabled: boolean) => void;
   onComplete?: (id: string) => void;
   onCancel?: (id: string) => void;
+  onClick?: (appointment: Appointment) => void;
 }
 
 const AppointmentCard: React.FC<AppointmentCardProps> = ({
   appointment,
   onToggleReminder,
   onComplete,
-  onCancel
+  onCancel,
+  onClick
 }) => {
-  const [isReminder, setIsReminder] = useState(appointment.isReminder);
-
   const containerClass = classnames(
     styles.container,
     appointment.status === 'upcoming' && styles.containerUpcoming,
@@ -42,7 +42,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
   const calculateCountdown = () => {
     const target = new Date(`${appointment.date}T${appointment.time}`);
-    const now = new Date('2026-06-20T10:00:00');
+    const now = new Date();
     const diff = target.getTime() - now.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
     return days;
@@ -51,8 +51,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
   const daysLeft = calculateCountdown();
 
   const handleToggleReminder = () => {
-    const newValue = !isReminder;
-    setIsReminder(newValue);
+    const newValue = !appointment.isReminder;
     onToggleReminder?.(appointment.id, newValue);
     console.log('[AppointmentCard] 提醒开关:', { id: appointment.id, enabled: newValue });
   };
@@ -71,8 +70,12 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
     return `${d.getMonth() + 1}月${d.getDate()}日`;
   };
 
+  const handleCardClick = () => {
+    onClick?.(appointment);
+  };
+
   return (
-    <View className={containerClass}>
+    <View className={containerClass} onClick={handleCardClick}>
       <View className={styles.header}>
       <View className={styles.titleSection}>
         <Text className={styles.appointmentTitle}>{appointment.title}</Text>
@@ -92,7 +95,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
         <View className={styles.reminderToggle}>
           <Text style={{ fontSize: '24rpx', color: '#94A3B8' }}>提醒</Text>
           <View
-            className={classnames(styles.toggle, isReminder && styles.toggleActive)}
+            className={classnames(styles.toggle, appointment.isReminder && styles.toggleActive)}
             onClick={handleToggleReminder}
           />
         </View>

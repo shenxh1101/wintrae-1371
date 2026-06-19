@@ -1,36 +1,283 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, Button, ScrollView } from '@tarojs/components';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, Button, ScrollView, Input, Picker, Switch } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
-import { familyMembers as initialMembers } from '@/data/families';
+import useAppStore from '@/store';
 import { FamilyMember } from '@/types';
 import FamilyCard from '@/components/FamilyCard';
 
+const RELATIONSHIP_OPTIONS = ['父亲', '母亲', '配偶', '子女', '兄弟姐妹', '家庭医生', '其他'];
+const PERMISSION_OPTIONS = ['查看记录', '接收提醒', '编辑药品', '管理家属', '导出报告'];
+
+const modalMaskStyle: React.CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  background: 'rgba(0, 0, 0, 0.5)',
+  display: 'flex',
+  alignItems: 'flex-end',
+  zIndex: 1000
+};
+
+const modalContentStyle: React.CSSProperties = {
+  width: '100%',
+  maxHeight: '85vh',
+  background: '#fff',
+  borderRadius: '24rpx 24rpx 0 0',
+  display: 'flex',
+  flexDirection: 'column'
+};
+
+const modalTitleStyle: React.CSSProperties = {
+  padding: '32rpx 32rpx 24rpx',
+  fontSize: '36rpx',
+  fontWeight: '700',
+  color: '#0F172A',
+  textAlign: 'center',
+  borderBottom: '1rpx solid #F1F5F9'
+};
+
+const modalScrollStyle: React.CSSProperties = {
+  flex: 1,
+  padding: '24rpx 32rpx 32rpx',
+  maxHeight: '60vh'
+};
+
+const formItemStyle: React.CSSProperties = {
+  marginBottom: '24rpx'
+};
+
+const formLabelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '28rpx',
+  fontWeight: '500',
+  color: '#0F172A',
+  marginBottom: '16rpx'
+};
+
+const formInputStyle: React.CSSProperties = {
+  width: '100%',
+  height: '80rpx',
+  padding: '0 32rpx',
+  background: '#F8FAFC',
+  borderRadius: '16rpx',
+  fontSize: '28rpx',
+  color: '#0F172A',
+  boxSizing: 'border-box'
+};
+
+const formPickerStyle: React.CSSProperties = {
+  width: '100%',
+  height: '80rpx',
+  padding: '0 32rpx',
+  background: '#F8FAFC',
+  borderRadius: '16rpx',
+  fontSize: '28rpx',
+  color: '#0F172A',
+  display: 'flex',
+  alignItems: 'center',
+  boxSizing: 'border-box'
+};
+
+const optionScrollStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: '16rpx',
+  whiteSpace: 'nowrap'
+};
+
+const optionBtnStyle: React.CSSProperties = {
+  height: '64rpx',
+  padding: '0 32rpx',
+  background: '#F8FAFC',
+  border: '1rpx solid #E2E8F0',
+  borderRadius: '40rpx',
+  fontSize: '24rpx',
+  color: '#64748B',
+  flexShrink: 0
+};
+
+const optionBtnActiveStyle: React.CSSProperties = {
+  height: '64rpx',
+  padding: '0 32rpx',
+  background: 'linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)',
+  border: 'none',
+  borderRadius: '40rpx',
+  fontSize: '24rpx',
+  color: '#fff',
+  flexShrink: 0
+};
+
+const switchRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '0 32rpx',
+  height: '80rpx',
+  background: '#F8FAFC',
+  borderRadius: '16rpx'
+};
+
+const modalFooterStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: '24rpx',
+  padding: '24rpx 32rpx',
+  paddingBottom: 'calc(24rpx + env(safe-area-inset-bottom))',
+  borderTop: '1rpx solid #F1F5F9',
+  background: '#fff'
+};
+
+const modalCancelStyle: React.CSSProperties = {
+  flex: 1,
+  height: '88rpx',
+  background: '#F8FAFC',
+  borderRadius: '40rpx',
+  fontSize: '32rpx',
+  fontWeight: '600',
+  color: '#64748B'
+};
+
+const modalConfirmStyle: React.CSSProperties = {
+  flex: 1,
+  height: '88rpx',
+  background: 'linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)',
+  borderRadius: '40rpx',
+  fontSize: '32rpx',
+  fontWeight: '600',
+  color: '#fff',
+  boxShadow: '0 8rpx 20rpx rgba(34, 197, 94, 0.3)'
+};
+
+const permTagWrapStyle: React.CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '16rpx'
+};
+
+const permTagStyle: React.CSSProperties = {
+  padding: '12rpx 24rpx',
+  background: '#F8FAFC',
+  border: '1rpx solid #E2E8F0',
+  borderRadius: '32rpx',
+  fontSize: '24rpx',
+  color: '#64748B'
+};
+
+const permTagActiveStyle: React.CSSProperties = {
+  padding: '12rpx 24rpx',
+  background: 'linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)',
+  border: 'none',
+  borderRadius: '32rpx',
+  fontSize: '24rpx',
+  color: '#fff'
+};
+
 const FamilyPage: React.FC = () => {
-  const [members] = useState<FamilyMember[]>(initialMembers);
+  const familyMembers = useAppStore((s) => s.familyMembers);
+  const addFamilyMember = useAppStore((s) => s.addFamilyMember);
+  const updateFamilyMember = useAppStore((s) => s.updateFamilyMember);
+  const deleteFamilyMember = useAppStore((s) => s.deleteFamilyMember);
+  const toggleFamilySync = useAppStore((s) => s.toggleFamilySync);
+  const generateDoctorReport = useAppStore((s) => s.generateDoctorReport);
+  const hydrate = useAppStore((s) => s.hydrate);
+
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const [formName, setFormName] = useState('');
+  const [formRelationship, setFormRelationship] = useState(RELATIONSHIP_OPTIONS[0]);
+  const [formPhone, setFormPhone] = useState('');
+  const [formAvatar, setFormAvatar] = useState('');
+  const [formIsSyncEnabled, setFormIsSyncEnabled] = useState(true);
+  const [formPermissions, setFormPermissions] = useState<string[]>(['查看记录', '接收提醒']);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
 
   const summary = useMemo(() => {
-    const total = members.length;
-    const syncEnabled = members.filter(m => m.isSyncEnabled).length;
-    const canEdit = members.filter(m => m.permissions.includes('编辑药品')).length;
+    const total = familyMembers.length;
+    const syncEnabled = familyMembers.filter(m => m.isSyncEnabled).length;
+    const canEdit = familyMembers.filter(m => m.permissions.includes('编辑药品')).length;
     return { total, syncEnabled, canEdit };
-  }, [members]);
+  }, [familyMembers]);
 
-  const handleToggleSync = (id: string, enabled: boolean) => {
-    console.log('[Family] 同步状态:', { id, enabled });
+  const resetForm = () => {
+    setFormName('');
+    setFormRelationship(RELATIONSHIP_OPTIONS[0]);
+    setFormPhone('');
+    setFormAvatar('');
+    setFormIsSyncEnabled(true);
+    setFormPermissions(['查看记录', '接收提醒']);
+    setEditingId(null);
+  };
+
+  const openAddModal = () => {
+    resetForm();
+    setShowModal(true);
+  };
+
+  const handleEdit = (member: FamilyMember) => {
+    setEditingId(member.id);
+    setFormName(member.name);
+    setFormRelationship(member.relationship);
+    setFormPhone(member.phone);
+    setFormAvatar(member.avatar);
+    setFormIsSyncEnabled(member.isSyncEnabled);
+    setFormPermissions([...member.permissions]);
+    setShowModal(true);
+  };
+
+  const handleSave = () => {
+    if (!formName.trim()) {
+      Taro.showToast({ title: '请输入姓名', icon: 'none' });
+      return;
+    }
+    if (!formRelationship.trim()) {
+      Taro.showToast({ title: '请选择关系', icon: 'none' });
+      return;
+    }
+
+    const data = {
+      name: formName.trim(),
+      relationship: formRelationship.trim(),
+      phone: formPhone.trim() || '未填写',
+      avatar: formAvatar.trim() || '',
+      isSyncEnabled: formIsSyncEnabled,
+      permissions: formPermissions.length > 0 ? formPermissions : ['查看记录']
+    };
+
+    if (editingId) {
+      updateFamilyMember(editingId, data);
+      Taro.showToast({ title: '已更新', icon: 'success' });
+    } else {
+      addFamilyMember(data);
+      Taro.showToast({ title: '已添加', icon: 'success' });
+    }
+    setShowModal(false);
+    resetForm();
+  };
+
+  const handleToggleSync = (id: string) => {
+    toggleFamilySync(id);
   };
 
   const handleShare = (member: FamilyMember) => {
     Taro.showActionSheet({
       itemList: ['发送健康周报', '发送月度报告', '发送就诊记录', '发送全部数据'],
-      success: (res) => {
-        const actions = ['健康周报', '月度报告', '就诊记录', '全部数据'];
-        Taro.showToast({
-          title: `已发送${actions[res.tapIndex]}给${member.name}`,
-          icon: 'success'
+      success: () => {
+        const reportText = generateDoctorReport();
+        Taro.setClipboardData({
+          data: reportText,
+          success: () => {
+            Taro.showToast({
+              title: '已复制到剪贴板',
+              icon: 'success'
+            });
+          }
         });
-        console.log('[Family] 分享报告:', { member: member.name, type: actions[res.tapIndex] });
       },
       fail: (err) => {
         console.error('[Family] 分享失败:', err);
@@ -38,31 +285,31 @@ const FamilyPage: React.FC = () => {
     });
   };
 
-  const handleEdit = (member: FamilyMember) => {
-    Taro.showToast({ title: `编辑: ${member.name}`, icon: 'none' });
-  };
-
-  const handleAddMember = () => {
-    Taro.showToast({ title: '添加家属成员', icon: 'none' });
-  };
-
-  const handleGenerateReport = (type: string) => {
+  const handleGenerateReport = () => {
     Taro.showLoading({ title: '生成报告中...' });
     setTimeout(() => {
       Taro.hideLoading();
+      const reportText = generateDoctorReport();
       Taro.showModal({
-        title: '报告生成成功',
-        content: `${type}已准备好，可以发送给医生或家属`,
-        confirmText: '立即发送',
-        cancelText: '稍后再说',
+        title: '健康报告',
+        content: reportText,
+        confirmText: '复制内容',
+        cancelText: '关闭',
         success: (res) => {
           if (res.confirm) {
-            Taro.showToast({ title: '已生成分享链接', icon: 'success' });
+            Taro.setClipboardData({
+              data: reportText,
+              success: () => {
+                Taro.showToast({
+                  title: '已复制到剪贴板',
+                  icon: 'success'
+                });
+              }
+            });
           }
         }
       });
-      console.log('[Family] 生成报告:', type);
-    }, 1200);
+    }, 500);
   };
 
   const handleInviteMember = () => {
@@ -78,38 +325,55 @@ const FamilyPage: React.FC = () => {
     });
   };
 
+  const handleDelete = (member: FamilyMember) => {
+    Taro.showModal({
+      title: '确认删除',
+      content: `确定删除"${member.name}"吗？`,
+      success: (res) => {
+        if (res.confirm) {
+          deleteFamilyMember(member.id);
+          Taro.showToast({ title: '已删除', icon: 'success' });
+        }
+      }
+    });
+  };
+
+  const togglePermission = (perm: string) => {
+    if (formPermissions.includes(perm)) {
+      setFormPermissions(formPermissions.filter(p => p !== perm));
+    } else {
+      setFormPermissions([...formPermissions, perm]);
+    }
+  };
+
   const reportOptions = [
     {
       icon: '📋',
       title: '就诊摘要',
       desc: '药品清单+复诊记录',
       bg: '#DCFCE7',
-      color: '#22C55E',
-      action: '就诊摘要'
+      color: '#22C55E'
     },
     {
       icon: '📊',
       title: '服药报告',
       desc: '连续服药率+异常记录',
       bg: '#DBEAFE',
-      color: '#3B82F6',
-      action: '服药报告'
+      color: '#3B82F6'
     },
     {
       icon: '🩺',
       title: '体征趋势',
       desc: '血压/血糖/心率数据',
       bg: '#FEF3C7',
-      color: '#F59E0B',
-      action: '体征趋势'
+      color: '#F59E0B'
     },
     {
       icon: '📄',
       title: '完整报告',
       desc: '含全部健康数据',
       bg: '#FFEDD5',
-      color: '#F97316',
-      action: '完整报告'
+      color: '#F97316'
     }
   ];
 
@@ -167,7 +431,7 @@ const FamilyPage: React.FC = () => {
               <View
                 key={idx}
                 className={styles.reportOption}
-                onClick={() => handleGenerateReport(opt.action)}
+                onClick={handleGenerateReport}
               >
                 <View
                   className={styles.optionIcon}
@@ -202,24 +466,24 @@ const FamilyPage: React.FC = () => {
             </View>
             <Button
               className={styles.addMemberBtn}
-              onClick={handleAddMember}
+              onClick={openAddModal}
             >
               + 添加
             </Button>
           </View>
 
-          {members.length === 0 ? (
+          {familyMembers.length === 0 ? (
             <View className="emptyState">
               <View className="emptyIcon">👨‍👩‍👧</View>
               <Text className="emptyText">暂无家属成员</Text>
               <Text className="emptyDesc">点击上方邀请按钮添加家人</Text>
             </View>
           ) : (
-            members.map(member => (
+            familyMembers.map(member => (
               <FamilyCard
                 key={member.id}
                 member={member}
-                onToggleSync={handleToggleSync}
+                onToggleSync={(id) => handleToggleSync(id)}
                 onShare={handleShare}
                 onEdit={handleEdit}
               />
@@ -243,9 +507,98 @@ const FamilyPage: React.FC = () => {
         </View>
       </View>
 
+      {showModal && (
+        <View style={modalMaskStyle} onClick={() => setShowModal(false)}>
+          <View style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+            <Text style={modalTitleStyle}>
+              {editingId ? '编辑家属成员' : '添加家属成员'}
+            </Text>
+            <ScrollView scrollY style={modalScrollStyle}>
+              <View style={formItemStyle}>
+                <Text style={formLabelStyle}>姓名 *</Text>
+                <Input
+                  style={formInputStyle}
+                  placeholder="请输入姓名"
+                  value={formName}
+                  onInput={(e) => setFormName(e.detail.value)}
+                />
+              </View>
+              <View style={formItemStyle}>
+                <Text style={formLabelStyle}>关系</Text>
+                <ScrollView scrollX style={optionScrollStyle}>
+                  {RELATIONSHIP_OPTIONS.map((rel) => (
+                    <Button
+                      key={rel}
+                      style={formRelationship === rel ? optionBtnActiveStyle : optionBtnStyle}
+                      onClick={() => setFormRelationship(rel)}
+                    >
+                      {rel}
+                    </Button>
+                  ))}
+                </ScrollView>
+              </View>
+              <View style={formItemStyle}>
+                <Text style={formLabelStyle}>手机号</Text>
+                <Input
+                  style={formInputStyle}
+                  type="number"
+                  placeholder="请输入手机号"
+                  value={formPhone}
+                  onInput={(e) => setFormPhone(e.detail.value)}
+                />
+              </View>
+              <View style={formItemStyle}>
+                <Text style={formLabelStyle}>头像链接</Text>
+                <Input
+                  style={formInputStyle}
+                  placeholder="请输入头像URL（可选）"
+                  value={formAvatar}
+                  onInput={(e) => setFormAvatar(e.detail.value)}
+                />
+              </View>
+              <View style={formItemStyle}>
+                <Text style={formLabelStyle}>同步开关</Text>
+                <View style={switchRowStyle}>
+                  <Text style={{ fontSize: '28rpx', color: '#0F172A' }}>
+                    {formIsSyncEnabled ? '已开启实时同步' : '已关闭同步'}
+                  </Text>
+                  <Switch
+                    checked={formIsSyncEnabled}
+                    onChange={(e) => setFormIsSyncEnabled(e.detail.value)}
+                    color="#22C55E"
+                  />
+                </View>
+              </View>
+              <View style={formItemStyle}>
+                <Text style={formLabelStyle}>权限设置</Text>
+                <View style={permTagWrapStyle}>
+                  {PERMISSION_OPTIONS.map((perm) => (
+                    <View
+                      key={perm}
+                      style={formPermissions.includes(perm) ? permTagActiveStyle : permTagStyle}
+                      onClick={() => togglePermission(perm)}
+                    >
+                      <Text>{perm}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+            <View style={modalFooterStyle}>
+              <Button style={modalCancelStyle} onClick={() => setShowModal(false)}>
+                取消
+              </Button>
+              <Button style={modalConfirmStyle} onClick={handleSave}>
+                保存
+              </Button>
+            </View>
+          </View>
+        </View>
+      )}
+
       <View
         className="fabButton"
-        onClick={handleAddMember}
+        onClick={openAddModal}
         style={{ background: 'linear-gradient(135deg, #F97316 0%, #FB923C 100%)', boxShadow: '0 8rpx 32rpx rgba(249, 115, 22, 0.4)' }}
       >
         <Text className="fabButtonText">+</Text>

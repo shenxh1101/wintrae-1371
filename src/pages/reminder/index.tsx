@@ -3,8 +3,7 @@ import { View, Text, Button, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
-import { reminders as initialReminders } from '@/data/reminders';
-import { medicines } from '@/data/medicines';
+import useAppStore from '@/store';
 import { Reminder, ReminderStatus } from '@/types';
 import ReminderCard from '@/components/ReminderCard';
 import StatCard from '@/components/StatCard';
@@ -12,70 +11,107 @@ import StatCard from '@/components/StatCard';
 type FilterType = 'all' | 'pending' | 'taken' | 'abnormal';
 
 const ReminderPage: React.FC = () => {
-  const [reminderList, setReminderList] = useState<Reminder[]>(initialReminders);
+  const reminders = useAppStore((s) => s.reminders);
+  const medicines = useAppStore((s) => s.medicines);
+  const takeReminder = useAppStore((s) => s.takeReminder);
+  const delayReminder = useAppStore((s) => s.delayReminder);
+  const missReminder = useAppStore((s) => s.missReminder);
+  const getTodayStats = useAppStore((s) => s.getTodayStats);
+
   const [filter, setFilter] = useState<FilterType>('all');
 
-  const stats = useMemo(() => {
-    const total = reminderList.length;
-    const taken = reminderList.filter(r => r.status === 'taken').length;
-    const pending = reminderList.filter(r => r.status === 'pending').length;
-    const abnormal = reminderList.filter(r => r.status === 'missed' || r.status === 'delayed').length;
-    const rate = total > 0 ? Math.round((taken / total) * 100) : 0;
-    return { total, taken, pending, abnormal, rate };
-  }, [reminderList]);
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const todayReminders = useMemo(
+    () => reminders.filter((r) => r.date === todayStr),
+    [reminders, todayStr]
+  );
+
+  const stats = useMemo(() => getTodayStats(), [getTodayStats, todayReminders]);
 
   const lowStockMedicines = useMemo(() => {
-    return medicines.filter(m => m.stock <= m.stockThreshold * 1.5);
-  }, []);
+    return medicines.filter((m) => m.stock <= m.stockThreshold * 1.5);
+  }, [medicines]);
 
   const filteredReminders = useMemo(() => {
-    let list = [...reminderList];
+    let list = [...todayReminders];
     switch (filter) {
       case 'pending':
-        list = list.filter(r => r.status === 'pending');
+        list = list.filter((r) => r.status === 'pending');
         break;
       case 'taken':
-        list = list.filter(r => r.status === 'taken');
+        list = list.filter((r) => r.status === 'taken');
         break;
       case 'abnormal':
-        list = list.filter(r => r.status === 'missed' || r.status === 'delayed');
+        list = list.filter((r) => r.status === 'missed' || r.status === 'delayed');
         break;
     }
     return list.sort((a, b) => a.time.localeCompare(b.time));
-  }, [reminderList, filter]);
+  }, [todayReminders, filter]);
 
   const groupedByTime = useMemo(() => {
     const groups: Record<string, Reminder[]> = {};
-    filteredReminders.forEach(r => {
+    filteredReminders.forEach((r) => {
       if (!groups[r.time]) groups[r.time] = [];
       groups[r.time].push(r);
     });
     return groups;
   }, [filteredReminders]);
 
+  const handleTake = (id: string) => {
+    takeReminder(id);
+    Taro.showToast({ title: '已确认服用', icon: 'success' });
+  };
+
+  const handleDelay = (id: string) => {
+    delayReminder(id, 30);
+    Taro.showToast({ title: '已延后30分钟', icon: 'none' });
+  };
+
+  const handleMiss = (id: string) => {
+    Taro.showModal({
+      title: '标记漏服',
+      editable: true,
+      placeholderText: '请输入漏服原因（选填）',
+      success: (res) => {
+        if (res.confirm) {
+          missReminder(id, res.content);
+          Taro.showToast({ title: '已标记漏服', icon: 'none' });
+        }
+      }
+    });
+  };
+
   const handleStatusChange = (id: string, status: ReminderStatus) => {
-    setReminderList(prev =>
-      prev.map(r =>
-        r.id === id
-          ? { ...r, status, actualTime: status !== 'pending' ? new Date().toTimeString().slice(0, 5) : undefined }
-          : r
-      )
-    );
+    switch (status) {
+      case 'taken':
+        handleTake(id);
+        break;
+      case 'delayed':
+        handleDelay(id);
+        break;
+      case 'missed':
+        handleMiss(id);
+        break;
+    }
   };
 
-  const handlePullDownRefresh = () => {
-    Taro.showLoading({ title: '刷新中...' });
-    setTimeout(() => {
-      Taro.hideLoading();
-      Taro.stopPullDownRefresh();
-      Taro.showToast({ title: '刷新成功', icon: 'success' });
-    }, 800);
+  const handleQuickAction = (text: string) => {
+    switch (text) {
+      case '添加药品':
+        Taro.switchTab({ url: '/pages/medicine/index' });
+        break;
+      case '记录体征':
+        Taro.switchTab({ url: '/pages/record/index' });
+        break;
+      case '预约复诊':
+        Taro.switchTab({ url: '/pages/appointment/index' });
+        break;
+      case '查看报告':
+        Taro.switchTab({ url: '/pages/family/index' });
+        break;
+    }
   };
-
-  React.useEffect(() => {
-    Taro.eventCenter.on('onPullDownRefresh', handlePullDownRefresh);
-    return () => Taro.eventCenter.off('onPullDownRefresh', handlePullDownRefresh);
-  }, []);
 
   const filterTabs: { key: FilterType; label: string }[] = [
     { key: 'all', label: '全部' },
@@ -84,7 +120,6 @@ const ReminderPage: React.FC = () => {
     { key: 'abnormal', label: '异常' }
   ];
 
-  const today = new Date('2026-06-20');
   const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
   const dateStr = `${today.getMonth() + 1}月${today.getDate()}日 ${weekDays[today.getDay()]}`;
 
@@ -96,7 +131,7 @@ const ReminderPage: React.FC = () => {
   ];
 
   return (
-    <ScrollView scrollY className={styles.listContainer ? '' : ''} style={{ minHeight: '100vh' }}>
+    <ScrollView scrollY style={{ minHeight: '100vh' }}>
       <View className="pageContainer">
         <View className="pageHeader">
           <Text className="pageTitle">今日用药提醒</Text>
@@ -108,11 +143,11 @@ const ReminderPage: React.FC = () => {
             <StatCard
               icon="✅"
               label="服药率"
-              value={`${stats.rate}%`}
+              value={`${stats.adherenceRate}%`}
               sub="今日完成情况"
               iconBg="#DCFCE7"
               iconColor="#22C55E"
-              trend={stats.rate >= 80 ? 'up' : 'down'}
+              trend={stats.adherenceRate >= 80 ? 'up' : 'down'}
             />
             <StatCard
               icon="⏰"
@@ -136,7 +171,11 @@ const ReminderPage: React.FC = () => {
 
         <View className={styles.quickActions}>
           {quickActions.map((action, idx) => (
-            <View key={idx} className={styles.quickAction}>
+            <View
+              key={idx}
+              className={styles.quickAction}
+              onClick={() => handleQuickAction(action.text)}
+            >
               <View
                 className={styles.quickActionIcon}
                 style={{ background: action.bg, color: action.color }}
@@ -149,7 +188,7 @@ const ReminderPage: React.FC = () => {
         </View>
 
         <View className={styles.filterTabs}>
-          {filterTabs.map(tab => (
+          {filterTabs.map((tab) => (
             <Button
               key={tab.key}
               className={classnames(
@@ -176,7 +215,7 @@ const ReminderPage: React.FC = () => {
                 <Text className={styles.timeGroupTime}>{time}</Text>
                 <Text className={styles.timeGroupCount}>{items.length}种</Text>
               </View>
-              {items.map(reminder => (
+              {items.map((reminder) => (
                 <View key={reminder.id} style={{ padding: '0 32rpx' }}>
                   <ReminderCard
                     reminder={reminder}
@@ -189,7 +228,10 @@ const ReminderPage: React.FC = () => {
         )}
       </View>
 
-      <View className="fabButton" onClick={() => Taro.showToast({ title: '添加提醒', icon: 'none' })}>
+      <View
+        className="fabButton"
+        onClick={() => Taro.switchTab({ url: '/pages/medicine/index' })}
+      >
         <Text className="fabButtonText">+</Text>
       </View>
     </ScrollView>

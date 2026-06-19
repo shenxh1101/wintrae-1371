@@ -13,17 +13,9 @@ interface FamilyCardProps {
 }
 
 const FamilyCard: React.FC<FamilyCardProps> = ({ member, onToggleSync, onShare, onEdit }) => {
-  const [isSyncEnabled, setIsSyncEnabled] = useState(member.isSyncEnabled);
-
   const handleToggleSync = () => {
-    const newValue = !isSyncEnabled;
-    setIsSyncEnabled(newValue);
+    const newValue = !member.isSyncEnabled;
     onToggleSync?.(member.id, newValue);
-    Taro.showToast({
-      title: newValue ? '已开启同步' : '已关闭同步',
-      icon: 'success',
-      duration: 1500
-    });
     console.log('[FamilyCard] 同步状态:', { id: member.id, sync: newValue });
   };
 
@@ -62,7 +54,7 @@ const FamilyCard: React.FC<FamilyCardProps> = ({ member, onToggleSync, onShare, 
         </View>
         <View className={styles.syncToggle}>
           <View
-            className={classnames(styles.toggle, isSyncEnabled && styles.toggleActive)}
+            className={classnames(styles.toggle, member.isSyncEnabled && styles.toggleActive)}
             onClick={handleToggleSync}
           />
         </View>
@@ -79,10 +71,10 @@ const FamilyCard: React.FC<FamilyCardProps> = ({ member, onToggleSync, onShare, 
 
       <View className={styles.syncStatus}>
         <Text className={styles.syncIcon}>
-          {isSyncEnabled ? '✅' : '🔕'}
+          {member.isSyncEnabled ? '✅' : '🔕'}
         </Text>
         <Text className={styles.syncText}>
-          {isSyncEnabled
+          {member.isSyncEnabled
             ? member.name + '可实时接收服药提醒和记录同步'
             : '已暂停向' + member.name + '的同步提醒'}
         </Text>

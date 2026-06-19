@@ -1,16 +1,21 @@
 import React, { useEffect } from 'react';
 import { useDidShow, useDidHide } from '@tarojs/taro';
-// 全局样式
 import './app.scss';
+import useAppStore from '@/store';
 
 function App(props) {
-  // 可以使用所有的 React Hooks
-  useEffect(() => {});
+  const hydrate = useAppStore((s) => s.hydrate);
+  const regenerateTodayReminders = useAppStore((s) => s.regenerateTodayReminders);
 
-  // 对应 onShow
-  useDidShow(() => {});
+  useEffect(() => {
+    hydrate();
+    regenerateTodayReminders();
+  }, [hydrate, regenerateTodayReminders]);
 
-  // 对应 onHide
+  useDidShow(() => {
+    regenerateTodayReminders();
+  });
+
   useDidHide(() => {});
 
   return props.children;

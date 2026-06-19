@@ -328,3 +328,33 @@
     transform: scale(0.98);
   }
 }
+
+.modalMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  z-index: 1000;
+}
+
+.modalContent {
+  width: 100%;
+  max-height: 85vh;
+  background: $color-bg-card;
+  border-radius: $radius-lg $radius-lg 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalTitle {
+  padding: $spacing-lg $page-padding $spacing-md;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  text-align: center;
+  border-bottom: 1rpx solid $color-border-light;
+}
