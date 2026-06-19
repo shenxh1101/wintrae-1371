@@ -1,0 +1,287 @@
+@use '@/styles/variables.scss' as *;
+
+.summaryCard {
+  margin: 0 $page-padding $spacing-lg;
+  padding: $spacing-xl;
+  background: linear-gradient(135deg, $color-remind 0%, $color-remind-light 100%);
+  border-radius: $radius-xl;
+  box-shadow: 0 8rpx 32rpx rgba(249, 115, 22, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.summaryBg {
+  position: absolute;
+  right: -40rpx;
+  top: -40rpx;
+  width: 240rpx;
+  height: 240rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.summaryHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  position: relative;
+  z-index: 1;
+}
+
+.summaryBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 20rpx;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.summaryTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+  position: relative;
+  z-index: 1;
+}
+
+.summaryDesc {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: $spacing-lg;
+  position: relative;
+  z-index: 1;
+}
+
+.summaryStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+  position: relative;
+  z-index: 1;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-sm;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-md;
+}
+
+.summaryValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  line-height: 1.2;
+}
+
+.summaryLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 4rpx;
+}
+
+.reportSection {
+  margin: 0 $page-padding $spacing-lg;
+  padding: $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.reportHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.reportTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.reportDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-md;
+  line-height: $line-height-normal;
+}
+
+.reportOptions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.reportOption {
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+    background: $color-primary-bg;
+  }
+}
+
+.optionIcon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-sm;
+  background: $color-primary-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+}
+
+.optionTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.optionDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.inviteCard {
+  margin: 0 $page-spacing-md;
+  padding: $spacing-lg;
+  margin-left: $page-padding;
+  margin-right: $page-padding;
+  margin-bottom: $spacing-md;
+  background: linear-gradient(135deg, $color-info-bg 0%, $color-primary-bg 100%);
+  border: 2rpx dashed $color-primary;
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.inviteIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  background: $color-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  color: $color-text-white;
+  flex-shrink: 0;
+}
+
+.inviteContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.inviteTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.inviteDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.tipsSection {
+  margin: $spacing-lg $page-padding 0;
+  padding: $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.tipsHeader {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.tipsList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.tipItem {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+}
+
+.tipDot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: $radius-round;
+  background: $color-primary;
+  margin-top: 12rpx;
+  flex-shrink: 0;
+}
+
+.tipText {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+.listSection {
+  padding: 0 $page-padding;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.addMemberBtn {
+  @include button-reset;
+  height: 56rpx;
+  padding: 0 $spacing-md;
+  border-radius: $radius-button;
+  background: $color-primary-bg;
+  color: $color-primary;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}

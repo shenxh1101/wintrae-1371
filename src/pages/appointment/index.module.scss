@@ -1,0 +1,204 @@
+@use '@/styles/variables.scss' as *;
+
+.summaryRow {
+  display: flex;
+  gap: $spacing-md;
+  padding: 0 $page-padding $spacing-lg;
+}
+
+.nextAppointment {
+  margin: 0 $page-padding $spacing-lg;
+  padding: $spacing-xl;
+  background: linear-gradient(135deg, $color-info 0%, $color-info-light 100%);
+  border-radius: $radius-xl;
+  box-shadow: 0 8rpx 32rpx rgba(59, 130, 246, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.nextBg {
+  position: absolute;
+  right: -40rpx;
+  bottom: -40rpx;
+  width: 280rpx;
+  height: 280rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.nextHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  position: relative;
+  z-index: 1;
+}
+
+.nextBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 20rpx;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}
+
+.nextCountdown {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+  position: relative;
+  z-index: 1;
+}
+
+.nextDays {
+  font-size: 72rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  line-height: 1;
+}
+
+.nextUnit {
+  font-size: $font-size-lg;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: $font-weight-medium;
+}
+
+.nextTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-sm;
+  position: relative;
+  z-index: 1;
+}
+
+.nextMeta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-md;
+  position: relative;
+  z-index: 1;
+}
+
+.nextMetaItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sectionFilter {
+  display: flex;
+  padding: $spacing-xs $page-padding $spacing-md;
+  gap: $spacing-sm;
+}
+
+.filterBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-sm;
+  border-radius: $radius-button;
+  background: $color-bg-card;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border: 1rpx solid $color-border;
+  transition: all $transition-base;
+}
+
+.filterBtnActive {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  border: none;
+}
+
+.uploadPrescription {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  margin: 0 $page-padding $spacing-lg;
+  padding: $spacing-xl $spacing-lg;
+  background: $color-bg-card;
+  border: 2rpx dashed $color-border;
+  border-radius: $radius-lg;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    border-color: $color-primary;
+  }
+}
+
+.uploadIcon {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: $radius-lg;
+  background: $color-remind-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+}
+
+.uploadTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.uploadDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  text-align: center;
+}
+
+.historySection {
+  margin-top: $spacing-lg;
+}
+
+.listContainer {
+  padding: 0 $page-padding;
+}
+
+.emptyUpcoming {
+  margin: 0 $page-padding;
+  padding: $spacing-xl * 2 $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.emptyIcon {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: $radius-round;
+  background: $color-info-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64rpx;
+}
+
+.emptyTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.emptyDesc {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  text-align: center;
+}

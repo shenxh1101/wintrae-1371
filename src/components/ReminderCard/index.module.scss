@@ -1,0 +1,178 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6rpx;
+    background: $color-primary;
+  }
+}
+
+.containerPending {
+  &::before {
+    background: $color-info;
+  }
+}
+
+.containerDelayed {
+  &::before {
+    background: $color-warning;
+  }
+}
+
+.containerMissed {
+  &::before {
+    background: $color-error;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.timeSection {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.timeBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.time {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  line-height: 1.2;
+}
+
+.timeTag {
+  margin-top: 4rpx;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.statusBadge {
+  padding: 6rpx 16rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.statusTaken {
+  background: $color-success-bg;
+  color: $color-success;
+}
+
+.statusPending {
+  background: $color-pending-bg;
+  color: $color-pending;
+}
+
+.statusDelayed {
+  background: $color-warning-bg;
+  color: $color-warning;
+}
+
+.statusMissed {
+  background: $color-error-bg;
+  color: $color-error;
+}
+
+.medicineSection {
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.medicineName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.medicineInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.actualTime {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
+
+.actions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.actionBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  border: none;
+}
+
+.btnSecondary {
+  background: $color-remind-bg;
+  color: $color-remind;
+  border: none;
+}
+
+.btnDanger {
+  background: $color-error-bg;
+  color: $color-error;
+  border: none;
+}
+
+.noteText {
+  margin-top: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: $color-warning-bg;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  color: $color-warning;
+}

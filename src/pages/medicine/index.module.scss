@@ -1,0 +1,158 @@
+@use '@/styles/variables.scss' as *;
+
+.searchBar {
+  padding: $spacing-sm $page-padding $spacing-md;
+  background: linear-gradient(180deg, $color-primary-bg 0%, $color-bg-page 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.searchInput {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 0 $spacing-lg;
+  height: 80rpx;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.searchIcon {
+  font-size: 32rpx;
+  color: $color-text-tertiary;
+}
+
+.searchText {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.categoryTabs {
+  display: flex;
+  gap: $spacing-sm;
+  padding: 0 $page-padding $spacing-md;
+  overflow-x: auto;
+  white-space: nowrap;
+  background: linear-gradient(180deg, $color-primary-bg 0%, $color-bg-page 100%);
+}
+
+.categoryTab {
+  @include button-reset;
+  height: 56rpx;
+  padding: 0 $spacing-lg;
+  border-radius: $radius-button;
+  background: $color-bg-card;
+  color: $color-text-secondary;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  border: 1rpx solid $color-border;
+  flex-shrink: 0;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.categoryTabActive {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  border: none;
+}
+
+.summaryCard {
+  margin: 0 $page-padding $spacing-lg;
+  padding: $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.summaryStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.summaryValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.summaryLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.lowStockCard {
+  margin: 0 $page-padding $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  background: linear-gradient(135deg, $color-error-bg 0%, $color-warning-bg 100%);
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.lowStockIcon {
+  font-size: 40rpx;
+}
+
+.lowStockContent {
+  flex: 1;
+}
+
+.lowStockTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-error;
+  margin-bottom: 4rpx;
+}
+
+.lowStockText {
+  font-size: $font-size-xs;
+  color: $color-warning;
+}
+
+.addPrescription {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  margin: 0 $page-padding $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  background: $color-remind-bg;
+  border: 2rpx dashed $color-remind;
+  border-radius: $radius-md;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.addPrescriptionIcon {
+  font-size: 32rpx;
+}
+
+.addPrescriptionText {
+  font-size: $font-size-sm;
+  color: $color-remind;
+  font-weight: $font-weight-medium;
+}
+
+.listContainer {
+  padding: 0 $page-padding;
+}

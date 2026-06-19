@@ -1,0 +1,330 @@
+@use '@/styles/variables.scss' as *;
+
+.statsCards {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+  padding: 0 $page-padding;
+}
+
+.overviewCard {
+  margin: 0 $page-padding $spacing-lg;
+  padding: $spacing-xl;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-xl;
+  box-shadow: 0 8rpx 32rpx rgba(34, 197, 94, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.overviewBg {
+  position: absolute;
+  right: -40rpx;
+  top: -40rpx;
+  width: 240rpx;
+  height: 240rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.overviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+  position: relative;
+  z-index: 1;
+}
+
+.overviewTitle {
+  font-size: $font-size-md;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: $font-weight-medium;
+}
+
+.overviewPeriod {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 20rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  color: $color-text-white;
+}
+
+.overviewMain {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  position: relative;
+  z-index: 1;
+}
+
+.overviewRate {
+  font-size: 80rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  line-height: 1;
+}
+
+.overviewUnit {
+  font-size: $font-size-xl;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: $font-weight-medium;
+}
+
+.overviewSub {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: $spacing-lg;
+  position: relative;
+  z-index: 1;
+}
+
+.overviewStreak {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: $radius-md;
+  position: relative;
+  z-index: 1;
+}
+
+.streakIcon {
+  font-size: 48rpx;
+}
+
+.streakText {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-white;
+}
+
+.streakValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+}
+
+.chartSection {
+  padding: 0 $page-padding;
+  margin-bottom: $spacing-lg;
+}
+
+.chartCard {
+  padding: $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+}
+
+.chartTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.chartTabs {
+  display: flex;
+  gap: $spacing-xs;
+}
+
+.chartTab {
+  @include button-reset;
+  height: 48rpx;
+  padding: 0 $spacing-md;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  color: $color-text-tertiary;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+}
+
+.chartTabActive {
+  background: $color-primary-bg;
+  color: $color-primary;
+}
+
+.barsContainer {
+  display: flex;
+  align-items: flex-end;
+  gap: $spacing-sm;
+  height: 200rpx;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.barItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.barFill {
+  width: 100%;
+  max-width: 40rpx;
+  border-radius: 8rpx 8rpx 4rpx 4rpx;
+  min-height: 8rpx;
+  transition: height $transition-base;
+}
+
+.barSuccess {
+  background: linear-gradient(180deg, $color-primary-light 0%, $color-primary 100%);
+}
+
+.barWarning {
+  background: linear-gradient(180deg, $color-warning 0%, $color-warning 100%);
+}
+
+.barError {
+  background: linear-gradient(180deg, lighten(#EF4444, 10%) 0%, $color-error 100%);
+}
+
+.barLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.barsLegend {
+  display: flex;
+  justify-content: center;
+  gap: $spacing-lg;
+  margin-top: $spacing-md;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.legendDot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 4rpx;
+}
+
+.sectionTabs {
+  display: flex;
+  padding: $spacing-xs $page-padding;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTab {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  background: $color-bg-card;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border: 1rpx solid $color-border;
+  transition: all $transition-base;
+}
+
+.sectionTabActive {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  border: none;
+}
+
+.abnormalList {
+  padding: 0 $page-padding;
+}
+
+.abnormalItem {
+  padding: $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+  border-left: 6rpx solid $color-error;
+}
+
+.abnormalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.abnormalMedicine {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.abnormalType {
+  padding: 4rpx 16rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.typeMissed {
+  background: $color-error-bg;
+  color: $color-error;
+}
+
+.typeDelayed {
+  background: $color-warning-bg;
+  color: $color-warning;
+}
+
+.abnormalInfo {
+  display: flex;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.abnormalNote {
+  padding: $spacing-sm $spacing-md;
+  background: $color-warning-bg;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  color: $color-warning;
+}
+
+.vitalsChart {
+  padding: 0 $page-padding;
+  margin-bottom: $spacing-lg;
+}
+
+.addVitalsBtn {
+  @include button-reset;
+  margin: 0 $page-padding $spacing-lg;
+  width: calc(100% - 64rpx);
+  height: $button-height-md;
+  border-radius: $radius-button;
+  background: linear-gradient(135deg, $color-info 0%, $color-info-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
